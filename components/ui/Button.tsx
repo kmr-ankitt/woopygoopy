@@ -1,10 +1,11 @@
 import colors from "@/styles/colors";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
-export default function Button({ value, width, onSubmit }: { value: string, width?: any, onSubmit?: any }) {
+export default function Button({ value, width, onSubmit, disabled}: { value: string, width?: any, onSubmit?: any, disabled?: boolean }) {
   return (
     <TouchableOpacity
       onPress={() => onSubmit()}
+      disabled={disabled}
       style={{
         backgroundColor: colors["zinc-200"],
         paddingVertical: 12,

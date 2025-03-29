@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { TextInput } from "react-native-paper";
 import Button from "@/components/ui/Button";
 import colors from "@/styles/colors";
 import { router } from "expo-router";
+import axios from "axios";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -16,6 +17,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
+  const [loading, setLoading] = useState(false);
   const {
     control,
     handleSubmit,
@@ -24,15 +26,26 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log("Login Data:", data);
-    router.push('/dashboard');
+  const onSubmit = async (data: LoginFormData) => {
+    setLoading(true);
+    try {
+      const response = await axios.post("http://172.168.168.25:4000/api/user/login", {
+        email: data.email,
+        password: data.password,
+      });
+
+      Alert.alert("Success", "Login successful!");
+      router.replace("/dashboard");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.error || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-
       <Controller
         control={control}
         name="email"
@@ -72,7 +85,7 @@ export default function LoginForm() {
       />
       {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
 
-      <Button value="Submit " onSubmit={handleSubmit(onSubmit)} width={'100%'} />
+      <Button value={loading ? "Logging in..." : "Login"} onSubmit={handleSubmit(onSubmit)} width="100%" disabled={loading} />
     </View>
   );
 }
@@ -89,7 +102,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
     color: colors["zinc-200"],
-    fontVariant: ['small-caps'],
+    fontVariant: ["small-caps"],
   },
   input: {
     marginBottom: 15,
@@ -98,9 +111,5 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     marginBottom: 10,
-  },
-  button: {
-    marginTop: 10,
-    paddingVertical: 8,
   },
 });

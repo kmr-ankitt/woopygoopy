@@ -4,15 +4,20 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { TextInput } from "react-native-paper";
+import { Picker } from "@react-native-picker/picker";
 import Button from "@/components/ui/Button";
 import colors from "@/styles/colors";
 import { router } from "expo-router";
 import axios from "axios";
 
+const HOUSES = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
+
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  house: z.string().min(2, "House is required"),
+  house: z.enum(["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"], {
+    message: "Invalid house selection",
+  }),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -21,21 +26,6 @@ const registerSchema = z.object({
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
-
-type InputField = {
-  name: keyof RegisterFormData;
-  label: string;
-  keyboardType?: "default" | "email-address" | "numeric";
-  secureTextEntry?: boolean;
-};
-
-const inputFields: InputField[] = [
-  { name: "name", label: "Name", keyboardType: "default" },
-  { name: "email", label: "Email", keyboardType: "email-address" },
-  { name: "house", label: "House", keyboardType: "default" },
-  { name: "password", label: "Password", secureTextEntry: true },
-  { name: "confirmPassword", label: "Confirm Password", secureTextEntry: true },
-];
 
 export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
@@ -51,7 +41,7 @@ export default function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     try {
-      const response = await axios.post("http://172.168.168.25:4000/api/user/register", {
+      await axios.post("http://172.168.168.25:4000/api/user/register", {
         name: data.name,
         email: data.email,
         house: data.house,
@@ -71,44 +61,110 @@ export default function RegisterForm() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Register</Text>
-      {inputFields.map(({ name, label, keyboardType, secureTextEntry }) => (
-        <View key={name}>
-          <Controller
-            control={control}
-            name={name}
-            render={({ field: { onChange, onBlur, value } }) => {
-              const [isPasswordVisible, setPasswordVisible] = React.useState(false);
 
-              return (
-                <TextInput
-                  label={label}
-                  value={value as string}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  keyboardType={keyboardType}
-                  secureTextEntry={secureTextEntry && !isPasswordVisible}
-                  mode="outlined"
-                  error={!!errors[name]}
-                  style={styles.input}
-                  textColor={colors["zinc-400"]}
-                  right={
-                    secureTextEntry ? (
-                      <TextInput.Icon
-                        icon={isPasswordVisible ? "eye-off" : "eye"}
-                        onPressIn={() => setPasswordVisible(true)}
-                        onPressOut={() => setPasswordVisible(false)}
-                      />
-                    ) : null
-                  }
-                />
-              );
-            }}
+      <Controller
+        control={control}
+        name="name"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            label="Name"
+            value={value}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            mode="outlined"
+            error={!!errors.name}
+            style={styles.input}
+            textColor={colors["zinc-400"]}
           />
-          {errors[name] && <Text style={styles.errorText}>{errors[name]?.message}</Text>}
-        </View>
-      ))}
+        )}
+      />
+      {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
 
-      <Button value={loading ? "Registering..." : "Register"} onSubmit={handleSubmit(onSubmit)} width="100%" disabled={loading} />
+      <Controller
+        control={control}
+        name="email"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            label="Email"
+            value={value}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            mode="outlined"
+            error={!!errors.email}
+            style={styles.input}
+            textColor={colors["zinc-400"]}
+          />
+        )}
+      />
+      {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
+
+      <Controller
+        control={control}
+        name="house"
+        render={({ field: { onChange, value } }) => (
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={value}
+              onValueChange={onChange}
+              style={styles.picker}
+            >
+              {HOUSES.map((house) => (
+                <Picker.Item key={house} label={house} value={house} />
+              ))}
+            </Picker>
+          </View>
+        )}
+      />
+      {errors.house && <Text style={styles.errorText}>{errors.house.message}</Text>}
+
+      <Controller
+        control={control}
+        name="password"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            label="Password"
+            value={value}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            secureTextEntry
+            mode="outlined"
+            error={!!errors.password}
+            style={styles.input}
+            textColor={colors["zinc-400"]}
+          />
+        )}
+      />
+      {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+
+      <Controller
+        control={control}
+        name="confirmPassword"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            label="Confirm Password"
+            value={value}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            secureTextEntry
+            mode="outlined"
+            error={!!errors.confirmPassword}
+            style={styles.input}
+            textColor={colors["zinc-400"]}
+          />
+        )}
+      />
+      {errors.confirmPassword && (
+        <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+      )}
+
+      <Button
+        value={loading ? "Registering..." : "Register"}
+        onSubmit={handleSubmit(onSubmit)}
+        width="100%"
+        disabled={loading}
+      />
     </View>
   );
 }
@@ -131,9 +187,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: colors["zinc-950"],
   },
+  pickerContainer: {
+    backgroundColor: colors["zinc-950"],
+    borderRadius: 5,
+    marginBottom: 15,
+  },
+  picker: {
+    color: colors["zinc-400"],
+  },
   errorText: {
     color: "red",
     marginBottom: 10,
   },
 });
-

@@ -17,8 +17,9 @@ export default function Index() {
   const [users, setUsers] = useState<Record<string, { latitude: number; longitude: number }>>({});
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [trees, setTrees] = useState([]);
-  const [score, setScore] = useState(0);
+  // const [score, setScore] = useState(0);
   const [house, setHouse] = useState("");
+  const [userScores, setUserScores] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
@@ -155,21 +156,66 @@ export default function Index() {
     }
   };
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const data = await fetchUserDetails();
+  //     if (data && data.length > 0) {
+  //       const { score, house } = data[0];
+  //       const { name } = house;
+  //       setHouse(name);
+  //     }
+
+  //     const scoreData = await getScore();
+  //     console.log(scoreData.score)
+  //     setScore(scoreData.score);
+  //   };
+  //   fetchData();
+  // }, [score]);
+
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetchUserDetails();
       if (data && data.length > 0) {
-        const { score, house } = data[0];
-        const { name } = house;
-        setHouse(name);
+        setHouse(data[0].house?.name || "");
       }
 
+      const userMail = await AsyncStorage.getItem("userEmail");
+      if (!userMail) return;
+
       const scoreData = await getScore();
-      console.log(scoreData.score)
-      setScore(scoreData.score);
+      if (scoreData?.score !== undefined) {
+        setUserScores((prevScores) => ({
+          ...prevScores,
+          [userMail]: scoreData.score, // Store scores per user
+        }));
+      }
     };
     fetchData();
-  }, [score]);
+  }, []);
+
+  useEffect(() => {
+    const fetchAllScores = async () => {
+      const updatedScores: Record<string, number> = {};
+
+      for (const userId of Object.keys(users)) {
+        try {
+          const response = await axios.get("http://172.168.168.25:4000/api/user/get-score", {
+            params: { emailId: userId },
+          });
+
+          if (response?.data?.score !== undefined) {
+            updatedScores[userId] = response.data.score;
+          }
+        } catch (error) {
+          console.error(`Error fetching score for ${userId}:`, error);
+        }
+      }
+
+      setUserScores(updatedScores);
+    };
+
+    fetchAllScores();
+  }, [users]);
 
   const cleanLitter = () => {
     if (!location) return;
@@ -203,7 +249,7 @@ export default function Index() {
       >
 
         {/* Show Users */}
-        {Object.entries(users).map(([userId, user]) => (
+        {/* {Object.entries(users).map(([userId, user]) => (
           user.latitude && user.longitude ? (
             <Marker key={userId}
               title={`User: ${userId}`}
@@ -215,6 +261,20 @@ export default function Index() {
               }}
             >
               <Text style={{ fontWeight: "bold", color: colors["zinc-100"], fontSize: 16 }}>{score}</Text>
+              <FontAwesome6 name="person" size={40} color={colors["red-400"]} />
+            </Marker>
+          ) : null
+        ))} */}
+        {Object.entries(users).map(([userId, user]) => (
+          user.latitude && user.longitude ? (
+            <Marker key={userId}
+              title={`User: ${userId}`}
+              description={`Lat: ${user.latitude}, Lng: ${user.longitude}`}
+              coordinate={{ latitude: user.latitude, longitude: user.longitude }}
+            >
+              <Text style={{ fontWeight: "bold", color: colors["zinc-100"], fontSize: 16 }}>
+                {userScores[userId] ?? 0} {/* Show user's actual score */}
+              </Text>
               <FontAwesome6 name="person" size={40} color={colors["red-400"]} />
             </Marker>
           ) : null

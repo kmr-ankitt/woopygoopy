@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontSize: 50,
+    fontSize: 30,
     fontWeight: 'bold',
     color: colors['zinc-200'],
     fontVariant: ['small-caps'],

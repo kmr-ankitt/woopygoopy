@@ -17,7 +17,6 @@ export default function Index() {
   const [users, setUsers] = useState<Record<string, { latitude: number; longitude: number }>>({});
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [trees, setTrees] = useState([]);
-  // const [score, setScore] = useState(0);
   const [house, setHouse] = useState("");
   const [userScores, setUserScores] = useState<Record<string, number>>({});
 
@@ -156,21 +155,6 @@ export default function Index() {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const data = await fetchUserDetails();
-  //     if (data && data.length > 0) {
-  //       const { score, house } = data[0];
-  //       const { name } = house;
-  //       setHouse(name);
-  //     }
-
-  //     const scoreData = await getScore();
-  //     console.log(scoreData.score)
-  //     setScore(scoreData.score);
-  //   };
-  //   fetchData();
-  // }, [score]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -236,8 +220,8 @@ export default function Index() {
         region={{
           latitude: location?.coords.latitude || 0,
           longitude: location?.coords.longitude || 0,
-          latitudeDelta: 0.00000001, // Smaller value for closer zoom
-          longitudeDelta: 0.00000001, // Smaller value for closer zoom
+          latitudeDelta: 0.000001, // Smaller value for closer zoom
+          longitudeDelta: 0.0000001, // Smaller value for closer zoom
         }}
         showsMyLocationButton={true}
         showsUserLocation={true}
@@ -249,22 +233,6 @@ export default function Index() {
       >
 
         {/* Show Users */}
-        {/* {Object.entries(users).map(([userId, user]) => (
-          user.latitude && user.longitude ? (
-            <Marker key={userId}
-              title={`User: ${userId}`}
-              description={`Lat: ${user.latitude}, Lng: ${user.longitude}`}
-              coordinate={{ latitude: user.latitude, longitude: user.longitude }}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ fontWeight: "bold", color: colors["zinc-100"], fontSize: 16 }}>{score}</Text>
-              <FontAwesome6 name="person" size={40} color={colors["red-400"]} />
-            </Marker>
-          ) : null
-        ))} */}
         {Object.entries(users).map(([userId, user]) => (
           user.latitude && user.longitude ? (
             <Marker key={userId}

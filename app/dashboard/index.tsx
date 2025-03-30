@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -7,6 +7,7 @@ import colors from "@/styles/colors";
 import { io } from "socket.io-client";
 import { mapCustomStyle } from "@/styles/style";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 const socket = io('http://172.168.168.25:4000');
 
@@ -56,8 +57,29 @@ export default function Index() {
       socket.off('location_update');
     };
   }, []);
+
+  const plantTree = () => {
+    if (!location) return;
+    const { latitude, longitude } = location.coords;
+
+  };
+
+  const cleanLitter = () => {
+    if (!location) return;
+  }
+
   return (
     <View style={styles.container}>
+      <View style={{ position: "absolute", top: 60, right: 16, zIndex: 1, gap: 15 }}>
+        <TouchableOpacity onPress={() => plantTree()}>
+          <FontAwesome6 name="tree" size={35} color={colors["green-400"]} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => cleanLitter()}>
+          <FontAwesome5 name="broom" size={24} color={colors["zinc-500"]} />
+        </TouchableOpacity>
+    
+
+      </View>
       <MapView
         style={styles.map}
         region={{
@@ -81,8 +103,8 @@ export default function Index() {
               description={`Lat: ${user.latitude}, Lng: ${user.longitude}`}
               coordinate={{ latitude: user.latitude, longitude: user.longitude }}
             >
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <FontAwesome6 name="person" size={35} color={colors["red-400"]} />
+              <View style={{ alignItems: 'center', flexDirection: "column-reverse", justifyContent: 'center', gap: 10 }}>
+                <FontAwesome6 name="person" size={40} color={colors["red-400"]} />
               </View>
             </Marker>
           ) : null

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -7,8 +7,9 @@ import colors from "@/styles/colors";
 import { io } from "socket.io-client";
 import { mapCustomStyle } from "@/styles/style";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import axios from "axios";
+import Entypo from '@expo/vector-icons/Entypo';
+import Button from "@/components/ui/Button";
 
 const socket = io('http://172.168.168.25:4000');
 
@@ -19,6 +20,7 @@ export default function Index() {
   const [trees, setTrees] = useState([]);
   const [house, setHouse] = useState("");
   const [userScores, setUserScores] = useState<Record<string, number>>({});
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
@@ -201,9 +203,9 @@ export default function Index() {
     fetchAllScores();
   }, [users]);
 
-  const cleanLitter = () => {
-    if (!location) return;
-  }
+  const openModal = () => {
+    setModalVisible(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -211,10 +213,30 @@ export default function Index() {
         <TouchableOpacity onPress={() => plantTree()}>
           <FontAwesome6 name="tree" size={35} color={colors["green-400"]} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => cleanLitter()}>
-          <FontAwesome5 name="broom" size={24} color={colors["zinc-500"]} />
+        <TouchableOpacity onPress={() => openModal()} >
+          <Entypo name="tree" size={27} color={colors["zinc-500"]} />
         </TouchableOpacity>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text style={styles.title}>Upload Plant Image</Text>
+            <Button value="Upload Image" onSubmit={() => console.log("Upload Image Pressed")} />
+            <Button value="Submit" onSubmit={() => console.log("Submit Pressed")} />
+
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <Text style={styles.closeText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <MapView
         style={styles.map}
         region={{
@@ -267,9 +289,40 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#1a1a1a", // Dark background
   },
   map: {
     width: '100%',
     height: '100%',
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.8)", // Darker overlay
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#2d2d2d", // Dark modal background
+    borderRadius: 10,
+    gap: 10,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#ffffff", // White text
+  },
+  closeButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#4b5563", // Dark button background
+    borderRadius: 5,
+  },
+  closeText: {
+    color: "#ffffff", // White text
+    fontWeight: "bold",
   },
 });

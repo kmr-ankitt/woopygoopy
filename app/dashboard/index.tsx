@@ -6,6 +6,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import colors from "@/styles/colors";
 import { io } from "socket.io-client";
 import { mapCustomStyle } from "@/styles/style";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const socket = io('http://172.168.168.25:4000');
 
@@ -18,11 +19,12 @@ export default function Index() {
     let locationSubscription: Location.LocationSubscription | null = null;
 
     async function startTrackingLocation() {
+      const userEmail = await AsyncStorage.getItem('userEmail');
+      if (!userEmail) return;
+
       if (locationPermission?.status !== 'granted') {
         const { status } = await requestLocationPermission();
-        if (status !== 'granted') {
-          return;
-        }
+        if (status !== 'granted') return;
       }
 
       locationSubscription = await Location.watchPositionAsync(
@@ -30,7 +32,7 @@ export default function Index() {
         (newLocation) => {
           setLocation(newLocation);
           socket.emit('update_location', {
-            userId: socket.id,
+            userEmail,
             latitude: newLocation.coords.latitude,
             longitude: newLocation.coords.longitude,
           });
@@ -54,7 +56,6 @@ export default function Index() {
       socket.off('location_update');
     };
   }, []);
-
   return (
     <View style={styles.container}>
       <MapView
@@ -62,7 +63,7 @@ export default function Index() {
         region={{
           latitude: location?.coords.latitude || 0,
           longitude: location?.coords.longitude || 0,
-          latitudeDelta:  0.00000001, // Smaller value for closer zoom
+          latitudeDelta: 0.00000001, // Smaller value for closer zoom
           longitudeDelta: 0.00000001, // Smaller value for closer zoom
         }}
         showsMyLocationButton={true}

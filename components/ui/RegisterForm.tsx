@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import colors from "@/styles/colors";
 import { router } from "expo-router";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HOUSES = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
 
@@ -47,6 +48,9 @@ export default function RegisterForm() {
         house: data.house,
         password: data.password,
       });
+
+      // Save email to local storage
+      await AsyncStorage.setItem("userEmail", data.email);
 
       Alert.alert("Success", "Registration completed!");
       reset();
@@ -110,6 +114,7 @@ export default function RegisterForm() {
               onValueChange={onChange}
               style={styles.picker}
             >
+              <Picker.Item label="Select House" value="" />
               {HOUSES.map((house) => (
                 <Picker.Item key={house} label={house} value={house} />
               ))}

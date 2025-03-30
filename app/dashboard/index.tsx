@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Entypo from '@expo/vector-icons/Entypo';
 import Button from "@/components/ui/Button";
+import * as ImagePicker from 'expo-image-picker';
 
 const socket = io('http://172.168.168.25:4000');
 
@@ -207,6 +208,97 @@ export default function Index() {
     setModalVisible(true);
   };
 
+  // const pickImage = async () => {
+  //   let result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ['images'],
+  //     // allowsEditing: true,
+  //     aspect: [4, 3],
+  //     quality: 1,
+  //   });
+
+  //   console.log(result);
+
+  //   if (!result.canceled) {
+  //     console.log(result.assets[0].uri);
+  //   }
+  // }
+
+  // const isPlant = async () => {
+  //   if (!location) return;
+
+  // }
+
+
+  const pickImage = async () => {
+    // Request media library permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "Allow access to media library to upload images.");
+      return;
+    }
+
+    // Launch image picker
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 1,
+    });
+
+    if (result.canceled || !result.assets || result.assets.length === 0) return;
+
+    const imageUri = result.assets[0].uri;
+
+    // Call function to upload image
+    uploadImage(imageUri);
+  };
+
+  const uploadImage = async (imageUri: string) => {
+    const formData = new FormData();
+    formData.append("image", {
+      uri: imageUri,
+      name: "upload.jpg", // Required filename
+      type: "image/jpeg", // Adjust based on actual image type
+    } as any);
+
+    try {
+      const response = await fetch("http://172.168.168.25:4000/api/plant-detector", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data.success) {
+        if (data.geminiResponse?.isPlant) {
+          Alert.alert("Response", "Tree Detected!");
+        } else {
+          Alert.alert("Response", "No Tree Detected.");
+        }
+      } else {
+        Alert.alert("Error", data.message);
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("Upload Failed", "Something went wrong, please try again.");
+    }
+  };
+
+  const openModalForCalc = () => {
+    Alert.alert(
+      "Calculator",
+      "This feature is not available yet.",
+      [
+        {
+          text: "OK",
+          onPress: () => console.log("OK Pressed"),
+        },
+      ]
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={{ position: "absolute", top: 60, right: 16, zIndex: 1, gap: 15 }}>
@@ -215,6 +307,9 @@ export default function Index() {
         </TouchableOpacity>
         <TouchableOpacity onPress={() => openModal()} >
           <Entypo name="tree" size={27} color={colors["zinc-500"]} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => openModalForCalc()} >
+          <Entypo name="calculator" size={30} color={colors["red-400"]} />
         </TouchableOpacity>
       </View>
 
@@ -227,8 +322,7 @@ export default function Index() {
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
             <Text style={styles.title}>Upload Plant Image</Text>
-            <Button value="Upload Image" onSubmit={() => console.log("Upload Image Pressed")} />
-            <Button value="Submit" onSubmit={() => console.log("Submit Pressed")} />
+            <Button value="Upload Image" onSubmit={pickImage} />
 
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
               <Text style={styles.closeText}>Close</Text>

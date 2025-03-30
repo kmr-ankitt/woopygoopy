@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -17,6 +17,8 @@ export default function Index() {
   const [users, setUsers] = useState<Record<string, { latitude: number; longitude: number }>>({});
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [trees, setTrees] = useState([]);
+  const [score, setScore] = useState(0);
+  const [house, setHouse] = useState("");
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
@@ -119,6 +121,56 @@ export default function Index() {
     fetchPlantedTrees();
   }, [trees]);
 
+  const fetchUserDetails = async () => {
+    try {
+      const userMail = await AsyncStorage.getItem("userEmail");
+      if (!userMail) return null;
+
+      const response = await axios.get("http://172.168.168.25:4000/api/user/details", {
+        params: { emailId: userMail },
+      });
+
+      return response?.data || null;
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      Alert.alert("Error", "Failed to load user details.");
+      return null;
+    }
+  };
+
+  const getScore = async () => {
+    try {
+      const userMail = await AsyncStorage.getItem("userEmail");
+      if (!userMail) return null;
+
+      const response = await axios.get("http://172.168.168.25:4000/api/user/get-score", {
+        params: { emailId: userMail },
+      });
+
+      return response?.data || null;
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      Alert.alert("Error", "Failed to load user details.");
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await fetchUserDetails();
+      if (data && data.length > 0) {
+        const { score, house } = data[0];
+        const { name } = house;
+        setHouse(name);
+      }
+
+      const scoreData = await getScore();
+      console.log(scoreData.score)
+      setScore(scoreData.score);
+    };
+    fetchData();
+  }, [score]);
+
   const cleanLitter = () => {
     if (!location) return;
   }
@@ -149,7 +201,7 @@ export default function Index() {
         showsTraffic={false}
         customMapStyle={mapCustomStyle}
       >
-        
+
         {/* Show Users */}
         {Object.entries(users).map(([userId, user]) => (
           user.latitude && user.longitude ? (
@@ -157,7 +209,12 @@ export default function Index() {
               title={`User: ${userId}`}
               description={`Lat: ${user.latitude}, Lng: ${user.longitude}`}
               coordinate={{ latitude: user.latitude, longitude: user.longitude }}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
+              <Text style={{ fontWeight: "bold", color: colors["zinc-100"], fontSize: 16 }}>{score}</Text>
               <FontAwesome6 name="person" size={40} color={colors["red-400"]} />
             </Marker>
           ) : null
@@ -167,8 +224,8 @@ export default function Index() {
         {trees.map((tree) => (
           <Marker
             key={tree.id}
-            title={`Planted by ${tree.emailId}`}
-            description={`Planted at: ${new Date(tree.plantedAt).toLocaleString()}`}
+            title={`Planted by ${house} house`}
+            description={`${tree.emailId}`}
             coordinate={{ latitude: tree.latitude, longitude: tree.longitude }}
           >
             <FontAwesome6 name="tree" size={35} color={colors["green-400"]} />

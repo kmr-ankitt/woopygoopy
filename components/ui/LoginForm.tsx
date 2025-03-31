@@ -30,7 +30,7 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
-      const response = await axios.post("http://172.168.168.25:4000/api/user/login", {
+      const response = await axios.post("http://192.168.253.76:4000/api/user/login", {
         email: data.email,
         password: data.password,
       });

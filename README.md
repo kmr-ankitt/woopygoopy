@@ -30,3 +30,4 @@ as Hogwarts Houses.
 
 ## Application 
 
+<img src="https://github.com/user-attachments/assets/2f32a422-0923-4383-86e7-ed9c38b077f9" style="width: 40%; aspect-ratio: 16/9; display: inline-block;" />

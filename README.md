@@ -12,6 +12,7 @@ as Hogwarts Houses.
 - Node.js
 - NeonDB
 - Prisma
+- Socket.io
 - Typescript
 
 ## Proposed Solution

@@ -30,10 +30,13 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
-      const response = await axios.post("http://192.168.253.76:4000/api/user/login", {
-        email: data.email,
-        password: data.password,
-      });
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/login`,
+        {
+          email: data.email,
+          password: data.password,
+        }
+      );
 
       // Save email to local storage
       await AsyncStorage.setItem("userEmail", data.email);

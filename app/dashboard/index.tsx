@@ -12,8 +12,8 @@ import Entypo from '@expo/vector-icons/Entypo';
 import Button from "@/components/ui/Button";
 import * as ImagePicker from 'expo-image-picker';
 
-const socket = io('http://192.168.253.76:4000');
-
+const socket = io(`${process.env.EXPO_PUBLIC_BACKEND_URL}`);
+        
 export default function Index() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [users, setUsers] = useState<Record<string, { latitude: number; longitude: number }>>({});
@@ -77,7 +77,7 @@ export default function Index() {
         return;
       }
 
-      await axios.post("http://192.168.253.76:4000/api/user/set-plant", {
+      await axios.post(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/set-plant`, {
         emailId: userMail,
         latitude,
         longitude,
@@ -95,7 +95,7 @@ export default function Index() {
       const userMail = await AsyncStorage.getItem("userEmail");
       if (!userMail) return;
 
-      const response = await axios.get("http://192.168.253.76:4000/api/user/get-plant", {
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/get-plant`, {
         params: { emailId: userMail },
       });
 
@@ -129,7 +129,7 @@ export default function Index() {
       const userMail = await AsyncStorage.getItem("userEmail");
       if (!userMail) return null;
 
-      const response = await axios.get("http://192.168.253.76:4000/api/user/details", {
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/details`, {
         params: { emailId: userMail },
       });
 
@@ -146,7 +146,7 @@ export default function Index() {
       const userMail = await AsyncStorage.getItem("userEmail");
       if (!userMail) return null;
 
-      const response = await axios.get("http://192.168.253.76:4000/api/user/get-score", {
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/get-score`, {
         params: { emailId: userMail },
       });
 
@@ -186,8 +186,7 @@ export default function Index() {
 
       for (const userId of Object.keys(users)) {
         try {
-          // const response = await axios.get("http://172.168.168.25:4000/api/user/get-score", {
-          const response = await axios.get("http://192.168.253.76:4000/api/user/get-score", {
+          const response = await axios.get(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/get-score`, {
             params: { emailId: userId },
           });
 
@@ -261,7 +260,7 @@ export default function Index() {
     } as any);
 
     try {
-      const response = await fetch("http://192.168.253.76:4000/api/plant-detector", {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/plant-detector`, {
         method: "POST",
         body: formData,
         headers: {
@@ -366,11 +365,11 @@ export default function Index() {
         ))}
 
         {/* Show Planted Trees */}
-        {trees.map((tree) => (
+        {Array.isArray(trees) && trees.map((tree: any) => (
           <Marker
-            key={tree.id}
+            key={tree.id || `${tree.latitude}-${tree.longitude}`}
             title={`Planted by ${house} house`}
-            description={`${tree.emailId}`}
+            description={`${tree.emailId || ""}`}
             coordinate={{ latitude: tree.latitude, longitude: tree.longitude }}
           >
             <FontAwesome6 name="tree" size={35} color={colors["green-400"]} />

@@ -42,7 +42,7 @@ export default function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     try {
-      await axios.post("http://192.168.253.76:4000/api/user/register", {
+      await axios.post(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/register`, {
         name: data.name,
         email: data.email,
         house: data.house,
